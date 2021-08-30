@@ -11,7 +11,7 @@ const Request = require('../projects/PerfTest/' + __ENV.Project + '/TestScripts/
 
 export let options = {
     vus: __ENV.USERS,
-    iterations: __ENV.TESTINGTIME,
+    duration: __ENV.TESTINGTIME,
 }
 
 export default function () {
