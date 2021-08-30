@@ -1,0 +1,101 @@
+schedules:
+  - cron: "15 12 * * *"
+    displayName: Content Services Staging(QA) daily build
+    branches:
+      include:
+      - master
+    always: true
+    
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    include: 
+     - pipelines/azure/ContentServices/ContentServices_API_QA_PerfTest.yml
+     
+pool:
+  vmImage: 'ubuntu-latest'
+
+parameters:
+- name: DEPLOYMENT_ENV
+  displayName: DEPLOYMENT_ENV
+  type: string
+  default: QA
+  values:
+    - QA
+    - TEST
+    - PROD
+
+- name: DEPLOYMENT_PROJECT
+  displayName: DEPLOYMENT_PROJECT
+  type: string
+  default: ContentServices
+
+- name: DEPLOYMENT_API_NAME
+  displayName: DEPLOYMENT_API_NAME
+  type: string
+  default: PostDictionary
+
+- name: DEPLOYMENT_DATA_SOURCE
+  displayName: DEPLOYMENT_DATA_SOURCE
+  type: string
+  default: ContentTest
+
+- name: DEPLOYMENT_USERS
+  displayName: DEPLOYMENT_USERS
+  type: string
+  default: 1
+
+- name: DEPLOYMENT_TEST_DURATION
+  displayName: DEPLOYMENT_TEST_DURATION
+  type: string
+  default: 1m
+
+- name: DEPLOYMENT_DBNAME
+  displayName: DEPLOYMENT_DBNAME
+  type: string
+  default: ContentServicesDB
+   
+stages:
+- stage: PERFORMANCE_TESTING
+  variables:
+   - name: src_env
+     value: ${{parameters.DEPLOYMENT_ENV}}
+   - name: src_project
+     value: ${{parameters.DEPLOYMENT_PROJECT}}
+   - name: src_api_name
+     value: ${{parameters.DEPLOYMENT_API_NAME}} 
+   - name: src_data_source
+     value: ${{parameters.DEPLOYMENT_DATA_SOURCE}}       
+   - name: src_users
+     value: ${{parameters.DEPLOYMENT_USERS}}       
+   - name: src_test_duration
+     value: ${{parameters.DEPLOYMENT_TEST_DURATION}}       
+   - name: src_dbname
+     value: ${{parameters.DEPLOYMENT_DBNAME}}     
+
+  jobs:
+  - job: Performance_Test_Execution
+  
+    steps:
+     - script: |
+          echo $(Build.SourcesDirectory)
+          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+       displayName: 'Install K6'
+  
+     - script: |
+          pwd
+          echo $(src_env)
+          echo $(src_project)
+          echo $(src_api_name)
+          echo $(src_data_source)
+          echo $(src_users)
+          echo $(src_test_duration)
+          echo $(src_dbname)
+          echo '$(Build.SourcesDirectory)'
+          bash '$(Build.SourcesDirectory)'/scripts/perfAPICmdString.sh $(src_env) $(src_project) $(src_api_name) $(src_data_source) $(src_users) $(src_test_duration) $(src_dbname)
+       displayName: 'Executing the Performance Test'      
