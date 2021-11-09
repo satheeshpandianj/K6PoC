@@ -1,11 +1,4 @@
-schedules:
-  - cron: "15 12 * * *"
-    displayName: Content Services Staging(QA) daily build
-    branches:
-      include:
-      - master
-    always: true
-    
+   
 trigger:
   branches:
     include:
